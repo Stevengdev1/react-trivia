@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import "./Quiz.css";
 import { data } from "../../assets/data";
 import Score from './Score';  
@@ -10,23 +10,19 @@ const Quiz = () => {
   let [score, setScore] = useState(0);
   let [result, setResult] = useState(false);
   let [answeredQuestions, setAnsweredQuestions] = useState(new Array(data.length).fill(false));
-
-  let Option1 = useRef(null);
-  let Option2 = useRef(null);
-  let Option3 = useRef(null);
-  let Option4 = useRef(null);
-
-  let option_array = [Option1, Option2, Option3, Option4];
+  let [optionClasses, setOptionClasses] = useState(data.map(() => [null, null, null, null]));
 
   const checkAns = (e, ans) => {
-    if (lock === false) {
+    if (!lock) {
+      let newClasses = [...optionClasses];
       if (question.ans === ans) {
-        e.target.classList.add("correct");
-        setScore((prev) => prev + 1);
+        newClasses[index][ans - 1] = "correct";
+        setScore(prev => prev + 1);
       } else {
-        e.target.classList.add("wrong");
-        option_array[question.ans - 1].current.classList.add("correct");
+        newClasses[index][ans - 1] = "wrong";
+        newClasses[index][question.ans - 1] = "correct";
       }
+      setOptionClasses(newClasses);
       setLock(true);
       const newAnsweredQuestions = [...answeredQuestions];
       newAnsweredQuestions[index] = true;
@@ -40,14 +36,6 @@ const Quiz = () => {
       setIndex(newIndex);
       setQuestion(data[newIndex]);
       setLock(answeredQuestions[newIndex]);
-
-      // Clear any visual feedback from the previous question
-      option_array.forEach((option) => {
-        if (option.current) {
-          option.current.classList.remove("wrong");
-          option.current.classList.remove("correct");
-        }
-      });
     }
   };
 
@@ -57,14 +45,6 @@ const Quiz = () => {
       setIndex(newIndex);
       setQuestion(data[newIndex]);
       setLock(answeredQuestions[newIndex]);
-
-      // Clear any visual feedback from the previous question
-      option_array.forEach((option) => {
-        if (option.current) {
-          option.current.classList.remove("wrong");
-          option.current.classList.remove("correct");
-        }
-      });
     } else {
       setResult(true);
     }
@@ -77,22 +57,23 @@ const Quiz = () => {
     setLock(false);
     setResult(false);
     setAnsweredQuestions(new Array(data.length).fill(false));
+    setOptionClasses(data.map(() => [null, null, null, null]));
   };
 
   const renderOptions = () => {
     if (index === 0 || answeredQuestions[index - 1]) {
       return (
         <ul>
-          <li ref={Option1} onClick={(e) => checkAns(e, 1)}>
+          <li className={optionClasses[index][0]} onClick={(e) => checkAns(e, 1)}>
             {question.option1}
           </li>
-          <li ref={Option2} onClick={(e) => checkAns(e, 2)}>
+          <li className={optionClasses[index][1]} onClick={(e) => checkAns(e, 2)}>
             {question.option2}
           </li>
-          <li ref={Option3} onClick={(e) => checkAns(e, 3)}>
+          <li className={optionClasses[index][2]} onClick={(e) => checkAns(e, 3)}>
             {question.option3}
           </li>
-          <li ref={Option4} onClick={(e) => checkAns(e, 4)}>
+          <li className={optionClasses[index][3]} onClick={(e) => checkAns(e, 4)}>
             {question.option4}
           </li>
         </ul>
@@ -111,7 +92,7 @@ const Quiz = () => {
       {result ? (
         <>
           <h2>
-            You answered {score} questions correctly out of {data.length} Your score is:  {percentage}%
+            You answered {score} questions correctly out of {data.length}. Your score is:  {percentage}%
           </h2>
           <button onClick={reset}>Reset</button>
         </>
